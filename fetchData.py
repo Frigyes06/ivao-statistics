@@ -124,66 +124,69 @@ def print_menu():
         print(key, '--', value)
 
 
-# TODO: Put all this (here to main function) inside a setup/startup function
-utc = pytz.UTC
-tz_London = timezone('Europe/London')
+def startup():
+    """"Startup function, fetches and processes JSON"""
+    utc = pytz.UTC
+    tz_London = timezone('Europe/London')
 
-# load whazzup.json, look for cached data.
-try:
-    with open('whazzup.json', 'r') as file:
-        jsonResponse = json.load(file)
-except Exception as e:
-    pass
-
-# Extract timestamp from JSON, get current time
-try:
-    lastRequest = utc.localize(datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))
-except Exception as e:
-    jsonResponse = 1
-now = datetime.now(tz_London)
-
-# If whazzup.json is outdated, nonexistent or corrupted, fetch it from Whazzup API
-if jsonResponse == 1 or lastRequest + timedelta(minutes=15) < now:
-    print("last request was more than 15 minutes ago! Updating...")
+    # load whazzup.json, look for cached data.
     try:
-        response = requests.get('https://api.ivao.aero/v2/tracker/whazzup')
-        response.raise_for_status()
-        # access JSOn content
-        jsonResponse = response.json()
+        with open('whazzup.json', 'r') as file:
+            jsonResponse = json.load(file)
+    except Exception as e:
+        pass
 
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}')
-    except Exception as err:
-        print(f'Other error occurred: {err}')
+    # Extract timestamp from JSON, get current time
+    try:
+        lastRequest = utc.localize(datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+    except Exception as e:
+        jsonResponse = 1
+    now = datetime.now(tz_London)
 
-    with open('whazzup.json', 'w+') as file:
-        json.dump(jsonResponse, file)
-else:
-    print("last request was less than 15 minutes ago! Using cached data...")
+    # If whazzup.json is outdated, nonexistent or corrupted, fetch it from Whazzup API
+    if jsonResponse == 1 or lastRequest + timedelta(minutes=15) < now:
+        print("last request was more than 15 minutes ago! Updating...")
+        try:
+            response = requests.get('https://api.ivao.aero/v2/tracker/whazzup')
+            response.raise_for_status()
+            # access JSOn content
+            jsonResponse = response.json()
 
-online_pilots = len(jsonResponse["clients"]["pilots"])
+        except HTTPError as http_err:
+            print(f'HTTP error occurred: {http_err}')
+        except Exception as e:
+            print(f'Other error occurred: {e}')
 
-online_atcs = len(jsonResponse["clients"]["atcs"])
+        with open('whazzup.json', 'w+') as file:
+            json.dump(jsonResponse, file)
+    else:
+        print("last request was less than 15 minutes ago! Using cached data...")
 
-active_airports = []
-arrival_airports = []
-departure_airports = []
+    online_pilots = len(jsonResponse["clients"]["pilots"])
 
-for i in range(online_pilots):
-    departure_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
-    arrival_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
+    online_atcs = len(jsonResponse["clients"]["atcs"])
 
-for airport in departure_airports:
-    new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
-    if new_airport not in active_airports:
-        active_airports.append(new_airport)
+    active_airports = []
+    arrival_airports = []
+    departure_airports = []
 
-for airport in arrival_airports:
-    new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
-    if new_airport not in active_airports:
-        active_airports.append(new_airport)
+    for i in range(online_pilots):
+        departure_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
+        arrival_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
+
+    for airport in departure_airports:
+        new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
+        if new_airport not in active_airports:
+            active_airports.append(new_airport)
+
+    for airport in arrival_airports:
+        new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
+        if new_airport not in active_airports:
+            active_airports.append(new_airport)
+    return online_pilots, online_atcs, active_airports
 
 if __name__ == '__main__':
+    online_pilots, online_atcs, active_airports = startup()
     while True:
         print_menu()
         option = ''
