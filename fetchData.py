@@ -162,28 +162,28 @@ def startup():
     else:
         print("last request was less than 15 minutes ago! Using cached data...")
 
-    online_pilots = len(jsonResponse["clients"]["pilots"])
+    onlinePilots = len(jsonResponse["clients"]["pilots"])
 
-    online_atcs = len(jsonResponse["clients"]["atcs"])
+    onlineATCs = len(jsonResponse["clients"]["atcs"])
 
-    active_airports = []
-    arrival_airports = []
-    departure_airports = []
+    activeAirports = []
+    arrivalAirports = []
+    departureAirports = []
 
-    for i in range(online_pilots):
-        departure_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
-        arrival_airports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
+    for i in range(onlinePilots):
+        departureAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
+        arrivalAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
 
-    for airport in departure_airports:
-        new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
+    for airport in departureAirports:
+        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
         if new_airport not in active_airports:
-            active_airports.append(new_airport)
+            activeAirports.append(new_airport)
 
-    for airport in arrival_airports:
-        new_airport = vars(Airport(airport, departure_airports.count(airport), arrival_airports.count(airport)))
+    for airport in arrivalAirports:
+        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
         if new_airport not in active_airports:
-            active_airports.append(new_airport)
-    return online_pilots, online_atcs, active_airports
+            activeAirports.append(new_airport)
+    return onlinePilots, onlineATCs, activeAirports
 
 if __name__ == '__main__':
     online_pilots, online_atcs, active_airports = startup()
