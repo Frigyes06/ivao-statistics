@@ -126,7 +126,6 @@ def print_menu():
 
 def startup():
     """"Startup function, fetches and processes JSON"""
-    utc = pytz.UTC
     tz_London = timezone('Europe/London')
 
     # load whazzup.json, look for cached data.
@@ -138,7 +137,7 @@ def startup():
 
     # Extract timestamp from JSON, get current time
     try:
-        lastRequest = utc.localize(datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+        lastRequest = datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
     except Exception as e:
         jsonResponse = 1
     now = datetime.now(tz_London)
@@ -176,12 +175,12 @@ def startup():
 
     for airport in departureAirports:
         new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in active_airports:
+        if new_airport not in activeAirports:
             activeAirports.append(new_airport)
 
     for airport in arrivalAirports:
         new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in active_airports:
+        if new_airport not in activeAirports:
             activeAirports.append(new_airport)
     return onlinePilots, onlineATCs, activeAirports
 
