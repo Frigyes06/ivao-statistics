@@ -125,15 +125,17 @@ def print_menu():
 
 
 def startup():
-    """"Startup function, fetches and processes JSON"""
+    """Startup function, fetches and processes JSON"""
     tz_London = timezone('Europe/London')
 
     # load whazzup.json, look for cached data.
     try:
         with open('whazzup.json', 'r') as file:
             jsonResponse = json.load(file)
+    except FileNotFoundError:
+        print("wazzup.json not found. Will create!")
     except Exception as e:
-        pass
+        print(f'Other error occurred: {e}')
 
     # Extract timestamp from JSON, get current time
     try:
@@ -183,6 +185,7 @@ def startup():
         if new_airport not in activeAirports:
             activeAirports.append(new_airport)
     return onlinePilots, onlineATCs, activeAirports
+
 
 if __name__ == '__main__':
     online_pilots, online_atcs, active_airports = startup()
