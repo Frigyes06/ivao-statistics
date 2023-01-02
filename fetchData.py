@@ -21,12 +21,13 @@ import pytz
 import json
 
 
-"""
-Airport class, used to construct the dict list of airports in the code
-Most likely replacable.
-TODO: Replace class with dict construction in code
-"""
 class Airport:
+    """
+    Airport class, used to construct the dict list of airports in the code
+    Most likely replacable.
+    TODO: Replace class with dict construction in code
+    """
+
     def __init__(self, code, deparures, arrivals):
         self.code = str(code)
         self.departures = deparures
@@ -36,9 +37,6 @@ class Airport:
         return f"code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}"
 
 
-"""
-Dict used in printing of menu options
-"""
 menuOptions = {
     1: 'List airports ranked by departures',
     2: 'List airports ranked by arrivals',
@@ -48,32 +46,26 @@ menuOptions = {
 }
 
 
-"""
-Used in sorting lists by number of departures
-"""
 def getDepartures(airport):
+    """Used in sorting lists by number of departures"""
     return airport.get('departures')
 
 
-"""
-Used in sorting lists by number of arrivals
-"""
 def getArrivals(airport):
+    """Used in sorting lists by number of arrivals"""
     return airport.get('arrivals')
 
 
-"""
-Used in sorting lists by total traffic (arrivals + departures)
-"""
 def getAll(airport):
+    """Used in sorting lists by total traffic (arrivals + departures)"""
     return airport.get('arrivals') + airport.get('departures')
 
 
-"""
-Sorts list by number of departures
-TODO: extract sort to list function, make this print only.
-"""
 def airportsByDepartures(activeAirports):
+    """
+    Sorts list by number of departures
+    TODO: extract sort to list function, make this print only.
+    """
     activeAirports.sort(key=getDepartures, reverse=True)
     airportList = []
     for airport in activeAirports:
@@ -84,11 +76,11 @@ def airportsByDepartures(activeAirports):
     return airportList
 
 
-"""
-Sorts list by number of arrivals
-TODO: extract sort to list function, make this print only.
-"""
 def airportsByArrivals(activeAirports):
+    """
+    Sorts list by number of arrivals
+    TODO: extract sort to list function, make this print only.
+    """
     activeAirports.sort(key=getArrivals, reverse=True)
     airportList = []
     for airport in activeAirports:
@@ -99,23 +91,23 @@ def airportsByArrivals(activeAirports):
     return airportList
 
 
-"""
-Sorts list by total traffic
-TODO: extract sort to list function, make this print only.
-"""
 def airportsByTotal(activeAirports):
+    """
+    Sorts list by total traffic
+    TODO: extract sort to list function, make this print only.
+    """
     activeAirports.sort(key=getAll, reverse=True)
     for airport in activeAirports:
         print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
     return activeAirports
 
 
-"""
-Prunes the airport list to only XA airports
-Achieves this by checking if ICAO code starts with K or P
-TODO: Check for edge cases, irregular airport codes.
-"""
 def pruneListToXA(activeAirports):
+    """
+    Prunes the airport list to only XA airports
+    Achieves this by checking if ICAO code starts with K or P
+    TODO: Check for edge cases, irregular airport codes.
+    """
     airportList = []
     for airport in activeAirports:
         if airport['code'].startswith("K") or airport['code'].startswith("P"):
@@ -124,10 +116,8 @@ def pruneListToXA(activeAirports):
     return airportList
 
 
-"""
-Prints out the CLI menu, as well as some basic statistics
-"""
 def print_menu():
+    """Prints out the CLI menu, as well as some basic statistics"""
     print(f"There are currently {online_pilots} pilots online")
     print(f"There are currently {online_atcs} ATCs online")
     for key, value in menuOptions.items():
