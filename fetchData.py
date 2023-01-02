@@ -1,4 +1,4 @@
-'''
+"""
 Copyright (c) 2023 Frigyes Erdosi-Szucs
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,8 +8,11 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-'''
+"""
 
+# TODO: camelCase all variable names, disambiguate names
+
+import sys
 import requests
 from requests.exceptions import HTTPError
 from datetime import datetime, timedelta
@@ -17,15 +20,26 @@ from pytz import timezone
 import pytz
 import json
 
+
+"""
+Airport class, used to construct the dict list of airports in the code
+Most likely replacable.
+TODO: Replace class with dict construction in code
+"""
 class Airport:
     def __init__(self, code, deparures, arrivals):
         self.code = str(code)
         self.departures = deparures
         self.arrivals = arrivals
-    def __str__(self):
-        return f"[code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}]"
 
-menu_options = {
+    def __str__(self):
+        return f"code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}"
+
+
+"""
+Dict used in printing of menu options
+"""
+menuOptions = {
     1: 'List airports ranked by departures',
     2: 'List airports ranked by arrivals',
     3: 'List airports ranked by total traffic.',
@@ -33,18 +47,35 @@ menu_options = {
     5: 'Exit',
 }
 
+
+"""
+Used in sorting lists by number of departures
+"""
 def getDepartures(airport):
     return airport.get('departures')
 
+
+"""
+Used in sorting lists by number of arrivals
+"""
 def getArrivals(airport):
     return airport.get('arrivals')
 
+
+"""
+Used in sorting lists by total traffic (arrivals + departures)
+"""
 def getAll(airport):
     return airport.get('arrivals') + airport.get('departures')
 
+
+"""
+Sorts list by number of departures
+TODO: extract sort to list function, make this print only.
+"""
 def airportsByDepartures(activeAirports):
     activeAirports.sort(key=getDepartures, reverse=True)
-    airportList=[]
+    airportList = []
     for airport in activeAirports:
         if airport['departures'] > 0:
             airportList.append(airport)
@@ -52,9 +83,14 @@ def airportsByDepartures(activeAirports):
         print(f"{airport['code']} has {airport['departures']} departures")
     return airportList
 
+
+"""
+Sorts list by number of arrivals
+TODO: extract sort to list function, make this print only.
+"""
 def airportsByArrivals(activeAirports):
     activeAirports.sort(key=getArrivals, reverse=True)
-    airportList=[]
+    airportList = []
     for airport in activeAirports:
         if airport['arrivals'] > 0:
             airportList.append(airport)
@@ -62,12 +98,23 @@ def airportsByArrivals(activeAirports):
         print(f"{airport['code']} has {airport['arrivals']} arrivals")
     return airportList
 
+
+"""
+Sorts list by total traffic
+TODO: extract sort to list function, make this print only.
+"""
 def airportsByTotal(activeAirports):
     activeAirports.sort(key=getAll, reverse=True)
     for airport in activeAirports:
         print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
     return activeAirports
 
+
+"""
+Prunes the airport list to only XA airports
+Achieves this by checking if ICAO code starts with K or P
+TODO: Check for edge cases, irregular airport codes.
+"""
 def pruneListToXA(activeAirports):
     airportList = []
     for airport in activeAirports:
@@ -76,13 +123,19 @@ def pruneListToXA(activeAirports):
     print("Pruned list to XA airports!")
     return airportList
 
+
+"""
+Prints out the CLI menu, as well as some basic statistics
+"""
 def print_menu():
     print(f"There are currently {online_pilots} pilots online")
     print(f"There are currently {online_atcs} ATCs online")
-    for key in menu_options.keys():
-        print (key, '--', menu_options[key] )
+    for key, value in menuOptions.items():
+        print(key, '--', value)
 
-utc=pytz.UTC
+
+# TODO: Put all this (here to main function) inside a setup/startup function
+utc = pytz.UTC
 tz_London = timezone('Europe/London')
 
 # load whazzup.json, look for cached data.
@@ -94,7 +147,7 @@ except Exception as e:
 
 # Extract timestamp from JSON, get current time
 try:
-    lastRequest = utc.localize(datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ')) 
+    lastRequest = utc.localize(datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ'))
 except Exception as e:
     jsonResponse = 1
 now = datetime.now(tz_London)
@@ -107,14 +160,12 @@ if jsonResponse == 1 or lastRequest + timedelta(minutes=15) < now:
         response.raise_for_status()
         # access JSOn content
         jsonResponse = response.json()
-        #print("Entire JSON response")
-        #print(jsonResponse)
 
     except HTTPError as http_err:
         print(f'HTTP error occurred: {http_err}')
     except Exception as err:
         print(f'Other error occurred: {err}')
-    
+
     with open('whazzup.json', 'w+') as file:
         json.dump(jsonResponse, file)
 else:
@@ -142,15 +193,15 @@ for airport in arrival_airports:
     if new_airport not in active_airports:
         active_airports.append(new_airport)
 
-if __name__=='__main__':
-    while(True):
+if __name__ == '__main__':
+    while True:
         print_menu()
         option = ''
         try:
             option = int(input('Enter your choice: '))
-        except:
+        except:     # TODO: specify exception type
             print('Wrong input. Please enter a number ...')
-        #Check what choice was entered and act accordingly
+        # Check what choice was entered and act accordingly
         if option == 1:
             airportsByDepartures(active_airports)
         elif option == 2:
@@ -161,6 +212,6 @@ if __name__=='__main__':
             active_airports = pruneListToXA(active_airports)
         elif option == 5:
             print('Thanks for using my statistics tool!')
-            exit()
+            sys.exit()
         else:
             print('Invalid option. Please enter a number between 1 and 5.')
