@@ -10,8 +10,6 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 """
 
-# TODO: camelCase all variable names, disambiguate names
-
 import sys
 import requests
 from requests.exceptions import HTTPError
@@ -25,7 +23,6 @@ class Airport:
     """
     Airport class, used to construct the dict list of airports in the code
     Most likely replacable.
-    TODO: Replace class with dict construction in code
     """
 
     def __init__(self, code, deparures, arrivals):
@@ -37,7 +34,7 @@ class Airport:
         return f"code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}"
 
 
-menuOptions = {
+MenuOptions = {
     1: 'List airports ranked by departures',
     2: 'List airports ranked by arrivals',
     3: 'List airports ranked by total traffic.',
@@ -46,27 +43,12 @@ menuOptions = {
 }
 
 
-def getDepartures(airport):
-    """Used in sorting lists by number of departures"""
-    return airport.get('departures')
-
-
-def getArrivals(airport):
-    """Used in sorting lists by number of arrivals"""
-    return airport.get('arrivals')
-
-
-def getAll(airport):
-    """Used in sorting lists by total traffic (arrivals + departures)"""
-    return airport.get('arrivals') + airport.get('departures')
-
-
-def airportsByDepartures(activeAirports):
+def airports_by_departures(activeAirports):
     """
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=getDepartures, reverse=True)
+    activeAirports.sort(key=lambda element: element['departures'], reverse=True)
     airportList = []
     for airport in activeAirports:
         if airport['departures'] > 0:
@@ -76,12 +58,12 @@ def airportsByDepartures(activeAirports):
     return airportList
 
 
-def airportsByArrivals(activeAirports):
+def airports_by_arrivals(activeAirports):
     """
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=getArrivals, reverse=True)
+    activeAirports.sort(key=lambda element: element['arrivals'], reverse=True)
     airportList = []
     for airport in activeAirports:
         if airport['arrivals'] > 0:
@@ -91,18 +73,18 @@ def airportsByArrivals(activeAirports):
     return airportList
 
 
-def airportsByTotal(activeAirports):
+def airports_by_total(activeAirports):
     """
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=getAll, reverse=True)
+    activeAirports.sort(key=lambda element: element['arrivals'] + element['departures'], reverse=True)
     for airport in activeAirports:
         print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
     return activeAirports
 
 
-def pruneListToXA(activeAirports):
+def prune_to_xa(activeAirports):
     """
     Prunes the airport list to only XA airports
     Achieves this by checking if ICAO code starts with K or P
@@ -120,7 +102,7 @@ def print_menu():
     """Prints out the CLI menu, as well as some basic statistics"""
     print(f"There are currently {online_pilots} pilots online")
     print(f"There are currently {online_atcs} ATCs online")
-    for key, value in menuOptions.items():
+    for key, value in MenuOptions.items():
         print(key, '--', value)
 
 
@@ -198,13 +180,13 @@ if __name__ == '__main__':
             print('Wrong input. Please enter a number ...')
         # Check what choice was entered and act accordingly
         if option == 1:
-            airportsByDepartures(active_airports)
+            airports_by_departures(active_airports)
         elif option == 2:
-            airportsByArrivals(active_airports)
+            airports_by_arrivals(active_airports)
         elif option == 3:
-            airportsByTotal(active_airports)
+            airports_by_total(active_airports)
         elif option == 4:
-            active_airports = pruneListToXA(active_airports)
+            active_airports = prune_to_xa(active_airports)
         elif option == 5:
             print('Thanks for using my statistics tool!')
             sys.exit()
