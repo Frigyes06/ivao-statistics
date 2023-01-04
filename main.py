@@ -43,45 +43,39 @@ MenuOptions = {
 }
 
 
-def airports_by_departures(activeAirports):
+def airports_by_departures():
     """
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=lambda element: element['departures'], reverse=True)
-    airportList = []
-    for airport in activeAirports:
-        if airport['departures'] > 0:
-            airportList.append(airport)
+    airportList = filter(lambda element: element['departures'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['departures'], reverse=True))
+
     for airport in airportList:
         print(f"{airport['code']} has {airport['departures']} departures")
     return airportList
 
 
-def airports_by_arrivals(activeAirports):
+def airports_by_arrivals():
     """
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=lambda element: element['arrivals'], reverse=True)
-    airportList = []
-    for airport in activeAirports:
-        if airport['arrivals'] > 0:
-            airportList.append(airport)
+    airportList = filter(lambda element: element['arrivals'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'], reverse=True))
+    
     for airport in airportList:
         print(f"{airport['code']} has {airport['arrivals']} arrivals")
     return airportList
 
 
-def airports_by_total(activeAirports):
+def airports_by_total():
     """
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    activeAirports.sort(key=lambda element: element['arrivals'] + element['departures'], reverse=True)
-    for airport in activeAirports:
+    airportList = sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'] + element['departures'], reverse=True)
+    for airport in airportList:
         print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
-    return activeAirports
+    return airportList
 
 
 def prune_to_xa(activeAirports):
@@ -90,18 +84,21 @@ def prune_to_xa(activeAirports):
     Achieves this by checking if ICAO code starts with K or P
     TODO: Check for edge cases, irregular airport codes.
     """
+    airportList = filter(lambda element: element['code'].startswith(("K", "PA", "PH", "TJ", "C")), ACTIVE_AIRPORTS)
+    """
     airportList = []
-    for airport in activeAirports:
+    for airport in ACTIVE_AIRPORTS:
         if airport['code'].startswith("K") or airport['code'].startswith("P"):
             airportList.append(airport)
+    """
     print("Pruned list to XA airports!")
     return airportList
 
 
 def print_menu():
     """Prints out the CLI menu, as well as some basic statistics"""
-    print(f"There are currently {online_pilots} pilots online")
-    print(f"There are currently {online_atcs} ATCs online")
+    print(f"There are currently {ONLINE_PILOTS} pilots online")
+    print(f"There are currently {ONLINE_ATCS} ATCs online")
     for key, value in MenuOptions.items():
         print(key, '--', value)
 
@@ -153,6 +150,7 @@ def startup():
     arrivalAirports = []
     departureAirports = []
 
+    # TODO: Clean this sphagetti up, make it more phytony
     for i in range(onlinePilots):
         departureAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
         arrivalAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
@@ -170,7 +168,7 @@ def startup():
 
 
 if __name__ == '__main__':
-    online_pilots, online_atcs, active_airports = startup()
+    ONLINE_PILOTS, ONLINE_ATCS, ACTIVE_AIRPORTS = startup()
     while True:
         print_menu()
         option = ''
@@ -180,13 +178,13 @@ if __name__ == '__main__':
             print('Wrong input. Please enter a number ...')
         # Check what choice was entered and act accordingly
         if option == 1:
-            airports_by_departures(active_airports)
+            airports_by_departures()
         elif option == 2:
-            airports_by_arrivals(active_airports)
+            airports_by_arrivals()
         elif option == 3:
-            airports_by_total(active_airports)
+            airports_by_total()
         elif option == 4:
-            active_airports = prune_to_xa(active_airports)
+            ACTIVE_AIRPORTS = prune_to_xa(ACTIVE_AIRPORTS)
         elif option == 5:
             print('Thanks for using my statistics tool!')
             sys.exit()
