@@ -48,11 +48,13 @@ def airports_by_departures():
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    airportList = filter(lambda element: element['departures'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['departures'], reverse=True))
+    airport_list = { key if val['departures'] else "": val for key, val in active_airports.items() }
+    if "" in airport_list:
+        del airport_list[""]
 
-    for airport in airportList:
-        print(f"{airport['code']} has {airport['departures']} departures")
-    return airportList
+    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['departures'], reverse=True):
+        print(f"{code} has {data['departures']} departures")
+    return airport_list
 
 
 def airports_by_arrivals():
@@ -60,11 +62,13 @@ def airports_by_arrivals():
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    airportList = filter(lambda element: element['arrivals'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'], reverse=True))
-    
-    for airport in airportList:
-        print(f"{airport['code']} has {airport['arrivals']} arrivals")
-    return airportList
+    airport_list = { key if val['arrivals'] else "": val for key, val in active_airports.items() }
+    if "" in airport_list:
+        del airport_list[""]
+
+    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['arrivals'], reverse=True):
+        print(f"{code} has {data['arrivals']} arrivals")
+    return airport_list
 
 
 def airports_by_total():
@@ -72,27 +76,25 @@ def airports_by_total():
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    airportList = sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'] + element['departures'], reverse=True)
-    for airport in airportList:
-        print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
-    return airportList
+    airport_list = { key: val for key, val in active_airports.items() }
+    if "" in airport_list:
+        del airport_list[""]
+
+    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['arrivals'] + element[1]['departures'], reverse=True):
+        print(f"{code} has {data['arrivals']} arrivals and {data['departures']}")
+    return airport_list
 
 
-def prune_to_xa(activeAirports):
+def prune_to_xa():
     """
     Prunes the airport list to only XA airports
     Achieves this by checking if ICAO code starts with K or P
     TODO: Check for edge cases, irregular airport codes.
     """
-    airportList = filter(lambda element: element['code'].startswith(("K", "PA", "PH", "TJ", "C")), ACTIVE_AIRPORTS)
-    """
-    airportList = []
-    for airport in ACTIVE_AIRPORTS:
-        if airport['code'].startswith("K") or airport['code'].startswith("P"):
-            airportList.append(airport)
-    """
+    only_xa_airports = { code: active_airports[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), active_airports.keys()) }
+
     print("Pruned list to XA airports!")
-    return airportList
+    return only_xa_airports
 
 
 def print_menu():
@@ -176,17 +178,17 @@ if __name__ == '__main__':
             option = int(input('Enter your choice: '))
         except:     # TODO: specify exception type
             print('Wrong input. Please enter a number ...')
-        # Check what choice was entered and act accordingly
-        if option == 1:
-            airports_by_departures()
-        elif option == 2:
-            airports_by_arrivals()
-        elif option == 3:
-            airports_by_total()
-        elif option == 4:
-            ACTIVE_AIRPORTS = prune_to_xa(ACTIVE_AIRPORTS)
-        elif option == 5:
-            print('Thanks for using my statistics tool!')
-            sys.exit()
-        else:
-            print('Invalid option. Please enter a number between 1 and 5.')
+        match option:
+            case 1:
+                airports_by_departures()
+            case 2:
+                airports_by_arrivals()
+            case 3:
+                airports_by_total()
+            case 4:
+                active_airports = prune_to_xa()
+            case 5:
+                print('Thanks for using my statistics tool!')
+                sys.exit()
+            case _:
+                print('Invalid option. Please enter a number between 1 and 5.')
