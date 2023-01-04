@@ -47,7 +47,7 @@ def airports_by_arrivals():
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = { key if val['arrivals'] else "": val for key, val in ACTIVE_AIRPORTS.items() }
+    airport_list = {key if val['arrivals'] else "": val for key, val in ACTIVE_AIRPORTS.items()}
     if "" in airport_list:
         del airport_list[""]
 
