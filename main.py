@@ -33,11 +33,11 @@ def airports_by_departures():
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = { key if val['departures'] else "": val for key, val in active_airports.items() }
+    airport_list = {key if val['departures'] else "": val for key, val in active_airports.items()}
     if "" in airport_list:
         del airport_list[""]
 
-    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['departures'], reverse=True):
+    for code, data in sorted(airport_list.items(), key=lambda element: element[1]['departures'], reverse=True):
         print(f"{code} has {data['departures']} departures")
     return airport_list
 
@@ -51,7 +51,7 @@ def airports_by_arrivals():
     if "" in airport_list:
         del airport_list[""]
 
-    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['arrivals'], reverse=True):
+    for code, data in sorted(airport_list.items(), key=lambda element: element[1]['arrivals'], reverse=True):
         print(f"{code} has {data['arrivals']} arrivals")
     return airport_list
 
@@ -61,11 +61,11 @@ def airports_by_total():
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = { key: val for key, val in active_airports.items() }
+    airport_list = dict(active_airports.items())
     if "" in airport_list:
         del airport_list[""]
 
-    for code, data in sorted(airport_list.items(), key = lambda element: element[1]['arrivals'] + element[1]['departures'], reverse=True):
+    for code, data in sorted(airport_list.items(), key=lambda element: element[1]['arrivals'] + element[1]['departures'], reverse=True):
         print(f"{code} has {data['arrivals']} arrivals and {data['departures']}")
     return airport_list
 
@@ -76,7 +76,7 @@ def prune_to_xa():
     Achieves this by checking if ICAO code starts with K or P
     TODO: Check for edge cases, irregular airport codes.
     """
-    only_xa_airports = { code: active_airports[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), active_airports.keys()) }
+    only_xa_airports = {code: active_airports[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), active_airports.keys())}
 
     print("Pruned list to XA airports!")
     return only_xa_airports
@@ -142,8 +142,8 @@ def startup():
 
     new_airport = {}
 
-    for airport in [ str(ap) for ap in filter(lambda ap: not(ap in new_airport), departureAirports + arrivalAirports) ]:
-        new_airport[airport] = { 'departures': departureAirports.count(airport), 'arrivals': arrivalAirports.count(airport) }
+    for airport in [str(ap) for ap in filter(lambda ap: not(ap in new_airport), departureAirports + arrivalAirports)]:
+        new_airport[airport] = {'departures': departureAirports.count(airport), 'arrivals': arrivalAirports.count(airport)}
 
     return onlinePilots, onlineATCs, new_airport
 
