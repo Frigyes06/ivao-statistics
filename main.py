@@ -19,21 +19,6 @@ import pytz
 import json
 
 
-class Airport:
-    """
-    Airport class, used to construct the dict list of airports in the code
-    Most likely replacable.
-    """
-
-    def __init__(self, code, deparures, arrivals):
-        self.code = str(code)
-        self.departures = deparures
-        self.arrivals = arrivals
-
-    def __str__(self):
-        return f"code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}"
-
-
 MenuOptions = {
     1: 'List airports ranked by departures',
     2: 'List airports ranked by arrivals',
@@ -148,29 +133,23 @@ def startup():
 
     onlineATCs = len(jsonResponse["clients"]["atcs"])
 
-    activeAirports = []
     arrivalAirports = []
     departureAirports = []
 
-    # TODO: Clean this sphagetti up, make it more phytony
     for i in range(onlinePilots):
         departureAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
         arrivalAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
 
-    for airport in departureAirports:
-        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in activeAirports:
-            activeAirports.append(new_airport)
+    new_airport = {}
 
-    for airport in arrivalAirports:
-        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in activeAirports:
-            activeAirports.append(new_airport)
-    return onlinePilots, onlineATCs, activeAirports
+    for airport in [ str(ap) for ap in filter(lambda ap: not(ap in new_airport), departureAirports + arrivalAirports) ]:
+        new_airport[airport] = { 'departures': departureAirports.count(airport), 'arrivals': arrivalAirports.count(airport) }
+
+    return onlinePilots, onlineATCs, new_airport
 
 
 if __name__ == '__main__':
-    ONLINE_PILOTS, ONLINE_ATCS, ACTIVE_AIRPORTS = startup()
+    ONLINE_PILOTS, ONLINE_ATCS, active_airports = startup()
     while True:
         print_menu()
         option = ''
