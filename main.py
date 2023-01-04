@@ -33,7 +33,7 @@ def airports_by_departures():
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = {key if val['departures'] else "": val for key, val in active_airports.items()}
+    airport_list = {key if val['departures'] else "": val for key, val in ACTIVE_AIRPORTS.items()}
     if "" in airport_list:
         del airport_list[""]
 
@@ -47,7 +47,7 @@ def airports_by_arrivals():
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = { key if val['arrivals'] else "": val for key, val in active_airports.items() }
+    airport_list = { key if val['arrivals'] else "": val for key, val in ACTIVE_AIRPORTS.items() }
     if "" in airport_list:
         del airport_list[""]
 
@@ -61,7 +61,7 @@ def airports_by_total():
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    airport_list = dict(active_airports.items())
+    airport_list = dict(ACTIVE_AIRPORTS.items())
     if "" in airport_list:
         del airport_list[""]
 
@@ -76,7 +76,7 @@ def prune_to_xa():
     Achieves this by checking if ICAO code starts with K or P
     TODO: Check for edge cases, irregular airport codes.
     """
-    only_xa_airports = {code: active_airports[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), active_airports.keys())}
+    only_xa_airports = {code: ACTIVE_AIRPORTS[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), ACTIVE_AIRPORTS.keys())}
 
     print("Pruned list to XA airports!")
     return only_xa_airports
@@ -97,7 +97,7 @@ def startup():
     # load whazzup.json, look for cached data.
     try:
         with open('whazzup.json', 'r') as file:
-            jsonResponse = json.load(file)
+            json_response = json.load(file)
     except FileNotFoundError:
         print("wazzup.json not found. Will create!")
     except Exception as e:
@@ -105,19 +105,19 @@ def startup():
 
     # Extract timestamp from JSON, get current time
     try:
-        lastRequest = datetime.strptime(jsonResponse['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+        last_request = datetime.strptime(json_response['updatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
     except Exception as e:
-        jsonResponse = 1
+        json_response = 1
     now = datetime.now(tz_London)
 
     # If whazzup.json is outdated, nonexistent or corrupted, fetch it from Whazzup API
-    if jsonResponse == 1 or lastRequest + timedelta(minutes=15) < now:
+    if json_response == 1 or last_request + timedelta(minutes=15) < now:
         print("last request was more than 15 minutes ago! Updating...")
         try:
             response = requests.get('https://api.ivao.aero/v2/tracker/whazzup')
             response.raise_for_status()
             # access JSOn content
-            jsonResponse = response.json()
+            json_response = response.json()
 
         except HTTPError as http_err:
             print(f'HTTP error occurred: {http_err}')
@@ -125,31 +125,31 @@ def startup():
             print(f'Other error occurred: {e}')
 
         with open('whazzup.json', 'w+') as file:
-            json.dump(jsonResponse, file)
+            json.dump(json_response, file)
     else:
         print("last request was less than 15 minutes ago! Using cached data...")
 
-    onlinePilots = len(jsonResponse["clients"]["pilots"])
+    online_pilots = len(json_response["clients"]["pilots"])
 
-    onlineATCs = len(jsonResponse["clients"]["atcs"])
+    online_atcs = len(json_response["clients"]["atcs"])
 
-    arrivalAirports = []
-    departureAirports = []
+    arrival_airports = []
+    departure_airports = []
 
-    for i in range(onlinePilots):
-        departureAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
-        arrivalAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
+    for i in range(online_pilots):
+        departure_airports.append(json_response["clients"]["pilots"][i]["flightPlan"]["departureId"])
+        arrival_airports.append(json_response["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
 
     new_airport = {}
 
-    for airport in [str(ap) for ap in filter(lambda ap: not(ap in new_airport), departureAirports + arrivalAirports)]:
-        new_airport[airport] = {'departures': departureAirports.count(airport), 'arrivals': arrivalAirports.count(airport)}
+    for airport in [str(ap) for ap in filter(lambda ap: not(ap in new_airport), departure_airports + arrival_airports)]:
+        new_airport[airport] = {'departures': departure_airports.count(airport), 'arrivals': arrival_airports.count(airport)}
 
-    return onlinePilots, onlineATCs, new_airport
+    return online_pilots, online_atcs, new_airport
 
 
 if __name__ == '__main__':
-    ONLINE_PILOTS, ONLINE_ATCS, active_airports = startup()
+    ONLINE_PILOTS, ONLINE_ATCS, ACTIVE_AIRPORTS = startup()
     while True:
         print_menu()
         option = ''
@@ -165,7 +165,7 @@ if __name__ == '__main__':
             case 3:
                 airports_by_total()
             case 4:
-                active_airports = prune_to_xa()
+                ACTIVE_AIRPORTS = prune_to_xa()
             case 5:
                 print('Thanks for using my statistics tool!')
                 sys.exit()
