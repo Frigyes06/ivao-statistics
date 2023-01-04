@@ -19,20 +19,6 @@ import pytz
 import json
 
 
-class Airport:
-    """
-    Airport class, used to construct the dict list of airports in the code
-    Most likely replacable.
-    """
-
-    def __init__(self, code, deparures, arrivals):
-        self.code = str(code)
-        self.departures = deparures
-        self.arrivals = arrivals
-
-    def __str__(self):
-        return f"code: {self.code}, departures: {self.departures}, arrivals: {self.arrivals}"
-
 
 MenuOptions = {
     1: 'List airports ranked by departures',
@@ -48,10 +34,12 @@ def airports_by_departures():
     Sorts list by number of departures
     TODO: extract sort to list function, make this print only.
     """
-    airportList = filter(lambda element: element['departures'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['departures'], reverse=True))
+    airportList = { key if val['departures'] else "": val for key, val in active_airports.items() }
+    if "" in airportList:
+        del airportList[""]
 
-    for airport in airportList:
-        print(f"{airport['code']} has {airport['departures']} departures")
+    for code, data in sorted(airportList.items(), key = lambda element: element[1]['departures'], reverse=True):
+        print(f"{code} has {data['departures']} departures")
     return airportList
 
 
@@ -60,7 +48,7 @@ def airports_by_arrivals():
     Sorts list by number of arrivals
     TODO: extract sort to list function, make this print only.
     """
-    airportList = filter(lambda element: element['arrivals'] > 0, sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'], reverse=True))
+    airportList = filter(lambda element: element['arrivals'] > 0, sorted(active_airports, key=lambda element: element['arrivals'], reverse=True))
     
     for airport in airportList:
         print(f"{airport['code']} has {airport['arrivals']} arrivals")
@@ -72,27 +60,23 @@ def airports_by_total():
     Sorts list by total traffic
     TODO: extract sort to list function, make this print only.
     """
-    airportList = sorted(ACTIVE_AIRPORTS, key=lambda element: element['arrivals'] + element['departures'], reverse=True)
+    airportList = sorted(active_airports, key=lambda element: element['arrivals'] + element['departures'], reverse=True)
     for airport in airportList:
         print(f"{airport['code']} has {airport['arrivals']} arrivals and {airport['departures']} departures")
     return airportList
 
 
-def prune_to_xa(activeAirports):
+def prune_to_xa():
     """
     Prunes the airport list to only XA airports
     Achieves this by checking if ICAO code starts with K or P
     TODO: Check for edge cases, irregular airport codes.
     """
-    airportList = filter(lambda element: element['code'].startswith(("K", "PA", "PH", "TJ", "C")), ACTIVE_AIRPORTS)
-    """
-    airportList = []
-    for airport in ACTIVE_AIRPORTS:
-        if airport['code'].startswith("K") or airport['code'].startswith("P"):
-            airportList.append(airport)
-    """
+    global active_airports
+    only_xa_airports = { code: active_airports[code] for code in filter(lambda code: code.startswith(("K", "C", "P", "PA", "PH", "TJ", "C")), active_airports.keys()) }
+    active_airports = dict(only_xa_airports)
     print("Pruned list to XA airports!")
-    return airportList
+    return only_xa_airports
 
 
 def print_menu():
@@ -146,36 +130,37 @@ def startup():
 
     onlineATCs = len(jsonResponse["clients"]["atcs"])
 
-    activeAirports = []
     arrivalAirports = []
     departureAirports = []
 
-    # TODO: Clean this sphagetti up, make it more phytony
     for i in range(onlinePilots):
         departureAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["departureId"])
         arrivalAirports.append(jsonResponse["clients"]["pilots"][i]["flightPlan"]["arrivalId"])
 
-    for airport in departureAirports:
-        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in activeAirports:
-            activeAirports.append(new_airport)
+    new_airport = {}
 
-    for airport in arrivalAirports:
-        new_airport = vars(Airport(airport, departureAirports.count(airport), arrivalAirports.count(airport)))
-        if new_airport not in activeAirports:
-            activeAirports.append(new_airport)
-    return onlinePilots, onlineATCs, activeAirports
+    for airport in [ str(ap) for ap in filter(lambda ap: not(ap in new_airport), departureAirports + arrivalAirports) ]:
+        new_airport[airport] = { 'departures': departureAirports.count(airport), 'arrivals': arrivalAirports.count(airport) }
+    print(new_airport)
+
+    return onlinePilots, onlineATCs, new_airport
 
 
 if __name__ == '__main__':
-    ONLINE_PILOTS, ONLINE_ATCS, ACTIVE_AIRPORTS = startup()
+    ONLINE_PILOTS, ONLINE_ATCS, active_airports = startup()
     while True:
         print_menu()
         option = ''
         try:
-            option = int(input('Enter your choice: '))
+            option = int(input('Enter your choice: ')) - 1
         except:     # TODO: specify exception type
             print('Wrong input. Please enter a number ...')
+        options = [airports_by_departures, airports_by_arrivals, airports_by_total, prune_to_xa, sys.exit]
+        if option < len(options):
+            options[option]()
+        else:
+            print('Invalid option. Please enter a number between 1 and 5.')
+        """
         # Check what choice was entered and act accordingly
         if option == 1:
             airports_by_departures()
@@ -184,9 +169,9 @@ if __name__ == '__main__':
         elif option == 3:
             airports_by_total()
         elif option == 4:
-            ACTIVE_AIRPORTS = prune_to_xa(ACTIVE_AIRPORTS)
+            active_airports = prune_to_xa()
+            print(list(active_airports))
         elif option == 5:
             print('Thanks for using my statistics tool!')
             sys.exit()
-        else:
-            print('Invalid option. Please enter a number between 1 and 5.')
+        """
